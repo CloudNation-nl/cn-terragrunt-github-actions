@@ -21,7 +21,6 @@ jobs:
           tf_actions_version: 0.12.13
           tg_actions_version: 'latest'
           tf_actions_subcommand: 'init'
-          tf_actions_working_dir: '.'
           tf_actions_comment: true
           args: '-backend-config="token=${{ secrets.TF_API_TOKEN }}" -backend-config="organization=CHANGE_ME"'
         env:

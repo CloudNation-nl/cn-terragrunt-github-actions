@@ -21,7 +21,6 @@ jobs:
           tf_actions_version: 0.12.13
           tg_actions_version: 'latest'
           tf_actions_subcommand: 'init'
-          tf_actions_working_dir: '.'
           tf_actions_comment: true
           tf_actions_cli_credentials_hostname: app.terraform.io 
           tf_actions_cli_credentials_token: ${{ secrets.TF_API_TOKEN }}
@@ -33,5 +32,4 @@ jobs:
           tf_actions_version: 0.12.13
           tg_actions_version: 'latest'
           tf_actions_subcommand: 'plan'
-          tf_actions_working_dir: '.'
 ```
