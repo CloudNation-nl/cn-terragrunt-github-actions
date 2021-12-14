@@ -245,11 +245,14 @@ function main {
   # array with enviroments where files are changed
   envDirsWithChanges=()
 
+  # set to true to update all environments
+  updateAllEnvironments=false
+
   echo "::group::Locate environments"
 
   # get changed files
-  changedFilesBetweenCurrentCommits=$(git diff --name-only origin/main...)
-  if [ ${#changedFilesBetweenCurrentCommits[@]} -eq 0 ]; then
+  changedFiles=$(git diff --name-only origin/main...)
+  if [ ${#changedFiles[@]} -eq 0 ]; then
       echo "::warning Nothing to do, no changes detected."
       exit 0
   fi
@@ -267,29 +270,63 @@ function main {
     done
   fi
 
-  for changedFile in $changedFilesBetweenCurrentCommits; do
-    for envDir in $environmentDirs; do
-
-      # example: "environment/prod"
-      envDirPath="$tfMultiEnvironmentDir/$envDir"
-
-      # check if changed file is inside the environment dir
-      if hasPrefix "$envDirPath" "${changedFile}"; then
-          
-          # add envDir to array if not already present
-          if [[ ! "${envDirsWithChanges[*]}" =~ "${envDirPath}" ]]; then
-              envDirsWithChanges+=("$envDirPath")
-          fi
-
-          # found, no reason to check leftovers
-          break
-      fi
-    done
-  done
-
   echo "::endgroup::"
 
   echo "::group::Environments that will be updated"
+
+  globalHclFiles=$(find "$tfMultiEnvironmentDir" -maxdepth 1 -mindepth 1 -type f -name \*.hcl -printf '%f\n')
+
+  # check if any global .hcl files are changed
+  for changedFile in $changedFiles; do
+
+    for globalHclFile in $globalHclFiles; do
+      if [[ "$changedFile" == "$tfMultiEnvironmentDir/$globalHclFile" ]]; then
+        updateAllEnvironments=true
+        break
+      fi
+    done
+
+    if [ "$updateAllEnvironments" = true ]; then
+      break
+    fi
+
+  done
+
+  if [ "$updateAllEnvironments" = false ]; then
+    for changedFile in $changedFiles; do
+
+      # get environments with changed files
+      for envDir in $environmentDirs; do
+
+        # example: "environment/prod"
+        envDirPath="$tfMultiEnvironmentDir/$envDir"
+
+        # check if changed file is inside the environment dir
+        if hasPrefix "$envDirPath" "${changedFile}"; then
+
+            # add envDir to array if not already present
+            if [[ ! "${envDirsWithChanges[*]}" =~ "${envDirPath}" ]]; then
+                envDirsWithChanges+=("$envDirPath")
+            fi
+
+            # found, no reason to check leftovers
+            break
+        fi
+      done
+    done
+
+  elif [ "$updateAllEnvironments" = true ]; then
+
+    echo "All environments will be updated because a global .hcl file is changed."
+
+    for envDir in $environmentDirs; do
+
+      envDirPath="$tfMultiEnvironmentDir/$envDir"
+      envDirsWithChanges+=("$envDirPath")
+    done
+  fi
+
+
   echo "The subcommand will be executed for the following environments with changes:"
   for envDir in ${envDirsWithChanges[@]}; do
     echo "- $envDir"
