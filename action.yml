@@ -5,6 +5,10 @@ branding:
   icon: 'cloud'
   color: 'purple'
 inputs:
+  tf_multi_env_dir:
+    description: 'Base directory where all environments are stored.'
+    default: environments
+    required: false
   tf_actions_subcommand:
     description: 'Terraform or Terragrunt subcommand to execute.'
     required: true
