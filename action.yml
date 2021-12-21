@@ -5,17 +5,12 @@ branding:
   icon: 'cloud'
   color: 'purple'
 inputs:
-  tf_multi_env_dir:
-    description: 'Base directory where all environments are stored.'
-    default: environments
-    required: false
   tf_actions_subcommand:
     description: 'Terraform or Terragrunt subcommand to execute.'
     required: true
   tf_actions_binary:
     description: 'Binary to use. Terraform or Terragrunt'
     default: 'terragrunt'
-    required: false
   tf_actions_version:
     description: 'Terraform version to install.'
     required: true
@@ -27,18 +22,17 @@ inputs:
   tf_actions_cli_credentials_hostname:
     description: 'Hostname for the CLI credentials file.'
     default: 'app.terraform.io'
-    required: false
   tf_actions_cli_credentials_token:
     description: 'Token for the CLI credentials file.'
-    required: false
   tf_actions_comment:
     description: 'Whether or not to comment on pull requests.'
-    default: "true"
-    required: false
+    default: true
+  tf_actions_working_dir:
+    description: 'Terragrunt working directory.'
+    default: '.'
   tf_actions_fmt_write:
     description: 'Write Terragrunt fmt changes to source files.'
-    default: "false"
-    required: false
+    default: false
 outputs:
   tf_actions_output:
     description: 'The Terragrunt outputs in JSON format.'

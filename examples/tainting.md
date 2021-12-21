@@ -19,6 +19,7 @@ jobs:
           tf_actions_version: 0.12.13
           tg_actions_version: 'latest'
           tf_actions_subcommand: 'init'
+          tf_actions_working_dir: '.'
           tf_actions_comment: true
         env:
           TF_WORKSPACE: dev
@@ -29,6 +30,7 @@ jobs:
           tf_actions_version: 0.12.13
           tg_actions_version: 'latest'
           tf_actions_subcommand: 'taint'
+          tf_actions_working_dir: '.'
           tf_actions_comment: true
           args: 'aws_instance.host'
         env:

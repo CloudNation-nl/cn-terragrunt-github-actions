@@ -1,88 +1,67 @@
-# Terragrunt Variables
+# Working Directory
 
-Variables can be configured directly in the GitHub Actions workflow YAML a few ways.
-
-## Using Arguments
-
-This example shows how to pass variables using the `-var` argument.
+Terragrunt GitHub Actions only supports running in a single working directory at a time. The working directory is set using the `tf_actions_working_dir` input. By default, the working directory is set to `.` which refers to the root of the GitHub repository.
 
 ```yaml
 name: 'Terragrunt GitHub Actions'
 on:
   - pull_request
 jobs:
-  terraform:
-    name: 'Terragrunt'
+  root:
+    name: 'Terragrunt (root)'
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout'
         uses: actions/checkout@master
       - name: 'Terragrunt Init'
-        uses: the-commons-project/terraform-github-actions@master
+        uses: the-commons-project/terragrunt-github-actions@master
         with:
           tf_actions_version: 0.12.13
           tg_actions_version: 'latest'
           tf_actions_subcommand: 'init'
           tf_actions_working_dir: '.'
           tf_actions_comment: true
-          args: '-var="env=dev"'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-This example shows how to use a variable file using the `-var-file` argument.
+If you need to run the Terragrunt Actions in multiple directories, you have to create separate jobs for each working directory.
 
 ```yaml
 name: 'Terragrunt GitHub Actions'
 on:
   - pull_request
 jobs:
-  terraform:
-    name: 'Terragrunt'
+  directory1:
+    name: 'Terragrunt (directory1)'
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout'
         uses: actions/checkout@master
       - name: 'Terragrunt Init'
-        uses: the-commons-project/terraform-github-actions@master
+        uses: the-commons-project/terragrunt-github-actions@master
         with:
           tf_actions_version: 0.12.13
           tg_actions_version: 'latest'
           tf_actions_subcommand: 'init'
-          tf_actions_working_dir: '.'
+          tf_actions_working_dir: 'directory1'
           tf_actions_comment: true
-          args: '-var-file="dev.tfvars"'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
-
-
-## Using an Environment Variable
-
-The `TF_VAR_name` environment variable can be used to define a value for a variable. When using `TF_VAR_name`,`name` is the name of the Terraform variable as declared in the Terraform files.
-
-Here, the Terraform variable `env` is set to the value `dev`.
-
-```yaml
-name: 'Terragrunt GitHub Actions'
-on:
-  - pull_request
-jobs:
-  terraform:
-    name: 'Terragrunt'
+  directory2:
+    name: 'Terragrunt (directory2)'
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout'
         uses: actions/checkout@master
       - name: 'Terragrunt Init'
-        uses: the-commons-project/terraform-github-actions@master
+        uses: the-commons-project/terragrunt-github-actions@master
         with:
           tf_actions_version: 0.12.13
           tg_actions_version: 'latest'
           tf_actions_subcommand: 'init'
-          tf_actions_working_dir: '.'
+          tf_actions_working_dir: 'directory2'
           tf_actions_comment: true
         env:
-          TF_VAR_env: 'dev'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```

@@ -20,6 +20,7 @@ jobs:
           tf_actions_version: 0.12.13
           tg_actions_version: 'latest'
           tf_actions_subcommand: 'output'
+          tf_actions_working_dir: '.'
       - name: 'Use Terraform Output'
         run: echo ${{ steps.terraform.outputs.tf_actions_output  }}
       - name: 'Pull specific database name from outputs'
