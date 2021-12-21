@@ -5,7 +5,7 @@
 
 TF_VERSION='0.14.6'
 TG_VERSION='v0.28.4'
-TF_WORKING_DIR='/var/opt'
+TF_MULTI_ENV_DIR='/var/opt'
 TF_SUBCOMMAND='run-all plan'
 TG_LOCAL_WORK_DIR="$(pwd)"  # TODO, provide some path which has the terragrunt code
 
@@ -20,7 +20,7 @@ function run_docker {
         -e INPUT_TF_ACTIONS_VERSION=$TF_VERSION \
         -e INPUT_TG_ACTIONS_VERSION=$TG_VERSION \
         -e INPUT_TF_ACTIONS_SUBCOMMAND="$TF_SUBCOMMAND" \
-        -e INPUT_TF_ACTIONS_WORKING_DIR="$TF_WORKING_DIR" \
+        -e INPUT_TF_MULTI_ENV_DIR="$TF_WORKING_DIR" \
         -v $TG_LOCAL_WORK_DIR:$TF_WORKING_DIR \
         tg "$*"
 }

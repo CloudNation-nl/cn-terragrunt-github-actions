@@ -21,7 +21,6 @@ jobs:
           tf_actions_version: 0.12.13
           tg_actions_version: 'v0.22.3'
           tf_actions_subcommand: 'init'
-          tf_actions_working_dir: '.'
           tf_actions_comment: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

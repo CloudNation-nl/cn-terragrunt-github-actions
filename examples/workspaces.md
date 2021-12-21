@@ -19,7 +19,6 @@ jobs:
           tf_actions_version: 0.12.13
           tg_actions_version: 'latest'
           tg_actions_subcommand: 'init'
-          tg_actions_working_dir: '.'
           tg_actions_comment: true
         env:
           TF_WORKSPACE: dev
