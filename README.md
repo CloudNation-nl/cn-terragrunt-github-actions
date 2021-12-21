@@ -21,6 +21,7 @@ on:
 env:
   tf_version: 'latest'
   tg_version: 'latest'
+  tf_working_dir: '.'
 jobs:
   terragrunt:
     name: 'Terragrunt'
@@ -35,6 +36,7 @@ jobs:
           tg_actions_version: ${{ env.tg_version }}
           tf_actions_binary: 'terraform'
           tf_actions_subcommand: 'fmt'
+          tf_actions_working_dir: ${{ env.tf_working_dir }}
           tf_actions_comment: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -44,6 +46,7 @@ jobs:
           tf_actions_version: ${{ env.tf_version }}
           tg_actions_version: ${{ env.tg_version }}
           tf_actions_subcommand: 'init'
+          tf_actions_working_dir: ${{ env.tf_working_dir }}
           tf_actions_comment: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -54,6 +57,7 @@ jobs:
           tg_actions_version: ${{ env.tg_version }}
           tf_actions_binary: 'terraform'
           tf_actions_subcommand: 'validate'
+          tf_actions_working_dir: ${{ env.tf_working_dir }}
           tf_actions_comment: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -63,6 +67,7 @@ jobs:
           tf_actions_version: ${{ env.tf_version }}
           tg_actions_version: ${{ env.tg_version }}
           tf_actions_subcommand: 'plan'
+          tf_actions_working_dir: ${{ env.tf_working_dir }}
           tf_actions_comment: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -83,7 +88,7 @@ Inputs configure Terraform GitHub Actions to perform different actions.
 | tf_actions_cli_credentials_hostname | Hostname for the CLI credentials file. Defaults to `app.terraform.io`. | `No` |
 | tf_actions_cli_credentials_token    | Token for the CLI credentials file.                        | `No`     |
 | tf_actions_comment                  | Whether or not to comment on GitHub pull requests. Defaults to `true`. | `No` |
-| tf_multi_env_dir                    | The directory where the different environments are stored. Defaults to the directory `environments`. | `No` |
+| tf_actions_working_dir              | The working directory to change into before executing Terragrunt subcommands. Defaults to the root of the GitHub repository. | `No` |
 | tf_actions_fmt_write                | Whether or not to write `fmt` changes to source files. Defaults to `false`. | `No` |
 
 ## Outputs
@@ -129,7 +134,7 @@ If you want to test these scripts locally, its possible after installing docker 
 1. Open `test/local-test.sh` and modify the GLOBAL variables (in caps) according to your needs
 2. Run it with: `test/local-test.sh` or `test/local-test.sh run-all plan`
 3. The above command:
- - Builds a docker container with image tag `tag`
+ - Builds a docker container with image tag `tg`
  - Starts that container with those global variables
 
 

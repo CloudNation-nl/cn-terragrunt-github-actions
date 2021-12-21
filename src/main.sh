@@ -43,6 +43,11 @@ function parseInputs {
   fi
 
   # Optional inputs
+  tfWorkingDir="."
+  if [[ -n "${INPUT_TF_ACTIONS_WORKING_DIR}" ]]; then
+    tfWorkingDir=${INPUT_TF_ACTIONS_WORKING_DIR}
+  fi
+
   tfBinary="terragrunt"
   if [[ -n "${INPUT_TF_ACTIONS_BINARY}" ]]; then
     tfBinary=${INPUT_TF_ACTIONS_BINARY}
@@ -72,10 +77,6 @@ function parseInputs {
   if [ -n "${TF_WORKSPACE}" ]; then
     tfWorkspace="${TF_WORKSPACE}"
   fi
-
-  if [ -n "${INPUT_TF_MULTI_ENV_DIR}" ]; then
-    tfMultiEnvironmentDir="${INPUT_TF_MULTI_ENV_DIR}"
-  fi
 }
 
 function configureCLICredentials {
@@ -89,7 +90,6 @@ EOF
 }
 
 function installTerraform {
-  echo "::group::Install Terraform"
   if [[ "${tfVersion}" == "latest" ]]; then
     echo "Checking the latest version of Terraform"
     tfVersion=$(curl -sL https://releases.hashicorp.com/terraform/index.json | jq -r '.versions[].version' | grep -v '[-].*' | sort -rV | head -n 1)
@@ -117,11 +117,9 @@ function installTerraform {
     exit 1
   fi
   echo "Successfully unzipped Terraform v${tfVersion}"
-  echo "::endgroup::"
 }
 
 function installTerragrunt {
-  echo "::group::Install Terragrunt"
   if [[ "${tgVersion}" == "latest" ]]; then
     echo "Checking the latest version of Terragrunt"
     latestURL=$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/gruntwork-io/terragrunt/releases/latest)
@@ -151,72 +149,7 @@ function installTerragrunt {
     exit 1
   fi
   echo "Successfully moved Terragrunt ${tgVersion}"
-  echo "::endgroup::"
 }
-
-function executeSubcommand {
-  case "${tfSubcommand}" in
-    fmt)
-      installTerragrunt
-      echo "::group::Executing subcommand \"${tfSubcommand}\" for environment: \"${envDir}\""
-      terragruntFmt ${*}
-      echo "::endgroup::"
-      ;;
-    init)
-      installTerragrunt
-      echo "::group::Executing subcommand \"${tfSubcommand}\" for environment: \"${envDir}\""
-      terragruntInit ${*}
-      echo "::endgroup::"
-      ;;
-    validate)
-      installTerragrunt
-      echo "::group::Executing subcommand \"${tfSubcommand}\" for environment: \"${envDir}\""
-      terragruntValidate ${*}
-      echo "::endgroup::"
-      ;;
-    plan)
-      installTerragrunt
-      echo "::group::Executing subcommand \"${tfSubcommand}\" for environment: \"${envDir}\""
-      terragruntPlan ${*}
-      echo "::endgroup::"
-      ;;
-    apply)
-      installTerragrunt
-      echo "::group::Executing subcommand \"${tfSubcommand}\" for environment: \"${envDir}\""
-      terragruntApply ${*}
-      echo "::endgroup::"
-      ;;
-    output)
-      installTerragrunt
-      echo "::group::Executing subcommand \"${tfSubcommand}\" for environment: \"${envDir}\""
-      terragruntOutput ${*}
-      echo "::endgroup::"
-      ;;
-    import)
-      installTerragrunt
-      echo "::group::Executing subcommand \"${tfSubcommand}\" for environment: \"${envDir}\""
-      terragruntImport ${*}
-      echo "::endgroup::"
-      ;;
-    taint)
-      installTerragrunt
-      echo "::group::Executing subcommand \"${tfSubcommand}\" for environment: \"${envDir}\""
-      terragruntTaint ${*}
-      echo "::endgroup::"
-      ;;
-    destroy)
-      installTerragrunt
-      echo "::group::Executing subcommand \"${tfSubcommand}\" for environment: \"${envDir}\""
-      terragruntDestroy ${*}
-      echo "::endgroup::"
-      ;;
-    *)
-      echo "::error::Must provide a valid value for terragrunt_subcommand"
-      exit 1
-      ;;
-  esac
-}
-
 
 function main {
   # Source the other files to gain access to their functions
@@ -234,109 +167,50 @@ function main {
   parseInputs
   configureCLICredentials
   installTerraform
-  cd ${GITHUB_WORKSPACE}
+  cd ${GITHUB_WORKSPACE}/${tfWorkingDir}
 
-  if [[ ! -d "$tfMultiEnvironmentDir" ]]
-  then
-      echo "::error::Multi environment directory doesn't exist: $(pwd)/${tfMultiEnvironmentDir}"
+  case "${tfSubcommand}" in
+    fmt)
+      installTerragrunt
+      terragruntFmt ${*}
+      ;;
+    init)
+      installTerragrunt
+      terragruntInit ${*}
+      ;;
+    validate)
+      installTerragrunt
+      terragruntValidate ${*}
+      ;;
+    plan)
+      installTerragrunt
+      terragruntPlan ${*}
+      ;;
+    apply)
+      installTerragrunt
+      terragruntApply ${*}
+      ;;
+    output)
+      installTerragrunt
+      terragruntOutput ${*}
+      ;;
+    import)
+      installTerragrunt
+      terragruntImport ${*}
+      ;;
+    taint)
+      installTerragrunt
+      terragruntTaint ${*}
+      ;;
+    destroy)
+      installTerragrunt
+      terragruntDestroy ${*}
+      ;;
+    *)
+      echo "Error: Must provide a valid value for terragrunt_subcommand"
       exit 1
-  fi
-
-  # array with enviroments where files are changed
-  envDirsWithChanges=()
-
-  # set to true to update all environments
-  updateAllEnvironments=false
-
-  echo "::group::Locate environments"
-
-  # get changed files
-  changedFiles=$(git diff --name-only origin/main...)
-  if [ ${#changedFiles[@]} -eq 0 ]; then
-      echo "::warning Nothing to do, no changes detected."
-      exit 0
-  fi
-
-  # get all directories inside the environments directory
-  environmentDirs=$(find "$tfMultiEnvironmentDir" -maxdepth 1 -mindepth 1 -type d -printf '%f\n')
-  if [ ${#environmentDirs[@]} -eq 0 ]; then
-    echo "::warning No directories found."
-    exit 0
-  else
-    echo "Found the following environment directories:"
-    for envDir in ${environmentDirs[@]}; do
-      envDirPath="$tfMultiEnvironmentDir/$envDir"
-      echo "- $envDirPath"
-    done
-  fi
-
-  echo "::endgroup::"
-
-  echo "::group::Environments that will be updated"
-
-  globalHclFiles=$(find "$tfMultiEnvironmentDir" -maxdepth 1 -mindepth 1 -type f -name \*.hcl -printf '%f\n')
-
-  # check if any global .hcl files are changed
-  for changedFile in $changedFiles; do
-
-    for globalHclFile in $globalHclFiles; do
-      if [[ "$changedFile" == "$tfMultiEnvironmentDir/$globalHclFile" ]]; then
-        updateAllEnvironments=true
-        break
-      fi
-    done
-
-    if [ "$updateAllEnvironments" = true ]; then
-      break
-    fi
-
-  done
-
-  if [ "$updateAllEnvironments" = false ]; then
-    for changedFile in $changedFiles; do
-
-      # get environments with changed files
-      for envDir in $environmentDirs; do
-
-        # example: "environment/prod"
-        envDirPath="$tfMultiEnvironmentDir/$envDir"
-
-        # check if changed file is inside the environment dir
-        if hasPrefix "$envDirPath" "${changedFile}"; then
-
-            # add envDir to array if not already present
-            if [[ ! "${envDirsWithChanges[*]}" =~ "${envDirPath}" ]]; then
-                envDirsWithChanges+=("$envDirPath")
-            fi
-
-            # found, no reason to check leftovers
-            break
-        fi
-      done
-    done
-
-  elif [ "$updateAllEnvironments" = true ]; then
-
-    echo "All environments will be updated because a global .hcl file is changed."
-
-    for envDir in $environmentDirs; do
-
-      envDirPath="$tfMultiEnvironmentDir/$envDir"
-      envDirsWithChanges+=("$envDirPath")
-    done
-  fi
-
-
-  echo "The subcommand will be executed for the following environments with changes:"
-  for envDir in ${envDirsWithChanges[@]}; do
-    echo "- $envDir"
-  done
-  echo "::endgroup::"
-
-  for envDir in ${envDirsWithChanges[@]}; do
-    cd "$envDir"
-    executeSubcommand
-  done
+      ;;
+  esac
 }
 
 main "${*}"
